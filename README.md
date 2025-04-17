@@ -255,3 +255,7 @@ A: [Doc](CONFIGKEY.md)
 ##### 9. Why is offline push not working?
 
 A: [Doc](CONFIGKEY.md)
+
+##### 10. ffmpeg not working?
+
+A：You can compile related libraries yourself, or use others https://github.com/carl-designlibro/ffmpeg-kit
