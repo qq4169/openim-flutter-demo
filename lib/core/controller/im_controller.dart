@@ -158,6 +158,7 @@ class IMController extends GetxController with IMCallback, OpenIMLive {
         onJoinedGroupDeleted: joinedGroupDeleted,
       ));
 
+    Logger().sdkIsInited = initialized;
     initializedSubject.sink.add(initialized);
   }
 
@@ -168,7 +169,6 @@ class IMController extends GetxController with IMCallback, OpenIMLive {
         token: token,
         defaultValue: () async => UserInfo(userID: userID),
       );
-      ApiService().setToken(token);
       userInfo = UserFullInfo.fromJson(user.toJson()).obs;
       _queryMyFullInfo();
       _queryAtAllTag();

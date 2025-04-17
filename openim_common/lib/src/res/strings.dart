@@ -1157,6 +1157,5 @@ class StrRes {
   static String get networkNotStable => 'networkNotStable'.tr;
   static String get otherNetworkNotStableHint => 'otherNetworkNotStableHint'.tr;
   static String get callingInterruption => 'callingInterruption'.tr;
-  static String get meeting => 'meeting'.tr;
   static String get directedTo => 'directedTo'.tr;
 }

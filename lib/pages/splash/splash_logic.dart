@@ -21,7 +21,6 @@ class SplashLogic extends GetxController {
   @override
   void onInit() {
     initializedSub = imLogic.initializedSubject.listen((value) {
-      Logger.print('---------------------initialized---------------------');
       if (null != userID && null != token) {
         _login();
       } else {

@@ -19,7 +19,6 @@ class ChatApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         enableLog: true,
         builder: builder,
-        logWriterCallback: Logger.print,
         translations: TranslationService(),
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,

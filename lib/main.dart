@@ -14,6 +14,6 @@ void main() {
 
     Config.init(() => runApp(const ChatApp()));
   }, (error, stackTrace) {
-    Logger.print('FlutterError: ${error.toString()}, ${stackTrace.toString()}');
+    Logger.print('FlutterError: ${error.toString()}, ${stackTrace.toString()}', onlyConsole: true);
   });
 }

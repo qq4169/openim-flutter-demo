@@ -1,14 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
-
-import 'package:collection/collection.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_openim_sdk/flutter_openim_sdk.dart';
 import 'package:get/get.dart';
 import 'package:openim_common/openim_common.dart';
-import 'package:sprintf/sprintf.dart';
-
-import 'utils/api_service.dart';
 
 class Apis {
   static Options get imTokenOptions => Options(headers: {'token': DataSp.imToken});
@@ -42,21 +36,11 @@ class Apis {
         'verifyCode': verificationCode,
       });
       final cert = LoginCertificate.fromJson(data!);
-      ApiService().setToken(cert.imToken);
 
       return cert;
-    } catch (e, _) {
-      final t = e as (int, String?)?;
+    } catch (e, s) {
+      _catchErrorHelper(e, s);
 
-      if (t == null) {
-        Logger.print('e:$e');
-
-        return Future.error(e);
-      }
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
       return Future.error(e);
     }
   }
@@ -95,15 +79,11 @@ class Apis {
       });
 
       final cert = LoginCertificate.fromJson(data!);
-      ApiService().setToken(cert.imToken);
 
       return cert;
     } catch (e, s) {
-      final t = e as (int, String?);
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
+      _catchErrorHelper(e, s);
+
       return Future.error(e);
     }
   }
@@ -129,11 +109,7 @@ class Apis {
         options: chatTokenOptions,
       );
     } catch (e, s) {
-      final t = e as (int, String?);
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
+      _catchErrorHelper(e, s);
     }
   }
 
@@ -155,11 +131,8 @@ class Apis {
       );
       return true;
     } catch (e, s) {
-      final t = e as (int, String?);
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
+      _catchErrorHelper(e, s);
+
       return false;
     }
   }
@@ -228,11 +201,7 @@ class Apis {
         options: chatTokenOptions,
       );
     } catch (e, s) {
-      final t = e as (int, String?);
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
+      _catchErrorHelper(e, s);
     }
   }
 
@@ -240,6 +209,7 @@ class Apis {
     String keyword, {
     int pageNumber = 1,
     int showNumber = 10,
+    bool showErrorToast = true,
   }) async {
     try {
       final data = await HttpUtil.post(
@@ -249,18 +219,16 @@ class Apis {
           'keyword': keyword,
         },
         options: chatTokenOptions,
+        showErrorToast: showErrorToast,
       );
       if (data['users'] is List) {
         return (data['users'] as List).map((e) => FriendInfo.fromJson(e)).toList();
       }
       return [];
     } catch (e, s) {
-      final t = e as (int, String?);
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
-      return [];
+      _catchErrorHelper(e, s);
+
+      rethrow;
     }
   }
 
@@ -284,11 +252,8 @@ class Apis {
       }
       return null;
     } catch (e, s) {
-      final t = e as (int, String?);
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
+      _catchErrorHelper(e, s);
+
       return [];
     }
   }
@@ -312,11 +277,8 @@ class Apis {
       }
       return null;
     } catch (e, s) {
-      final t = e as (int, String?);
-      final errCode = t.$1;
-      final errMsg = t.$2;
-      _kickoff(errCode);
-      Logger.print('e:$errCode s:$errMsg');
+      _catchErrorHelper(e, s);
+
       return [];
     }
   }
@@ -348,7 +310,8 @@ class Apis {
       IMViews.showToast(StrRes.sentSuccessfully);
       return true;
     }).catchError((e, s) {
-      Logger.print('e:$e s:$s');
+      _catchErrorHelper(e, s);
+
       return false;
     });
   }
@@ -365,7 +328,9 @@ class Apis {
       final signaling = SignalingCertificate.fromJson(value)..roomID = roomID;
       return signaling;
     }).catchError((e, s) {
-      Logger.print('e:$e s:$s');
+      _catchErrorHelper(e, s);
+
+      throw e;
     });
   }
 
@@ -413,23 +378,24 @@ class Apis {
     return {'discoverPageURL': Config.discoverPageURL, 'allowSendMsgNotFriend': Config.allowSendMsgNotFriend};
   }
 
-  static void _catchError(Object e, StackTrace s, {bool forceBack = true}) {
-    if (e is ApiException) {
-      var msg = '${e.code}'.tr;
-      if (msg.isEmpty || e.code.toString() == msg) {
-        msg = e.message ?? 'Unkonw error';
-      } else if (e.code == 1004) {
-        msg = sprintf(msg, [StrRes.meeting]);
-      }
+  static void _catchErrorHelper(Object e, StackTrace s) {
+    if (e is (int, String?)) {
+      final errCode = e.$1;
+      final errMsg = e.$2;
+      _kickoff(errCode);
 
-      IMViews.showToast(msg);
-
-      if ((e.code == 10010 || e.code == 10002) && forceBack) {
-        DataSp.removeLoginCertificate();
-        Get.offAllNamed('/login');
-      }
+      Logger.print('e:$errCode s:$errMsg');
     } else {
-      IMViews.showToast(e.toString());
+      _catchError(e, s);
+    }
+  }
+
+  static void _catchError(Object e, StackTrace s, {bool forceBack = true}) {
+    IMViews.showToast(e.toString());
+
+    if (forceBack) {
+      DataSp.removeLoginCertificate();
+      Get.offAllNamed('/login');
     }
   }
 }

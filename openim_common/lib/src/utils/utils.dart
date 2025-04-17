@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/ffprobe_kit.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
+import 'package:ffmpeg_kit_flutter_full_gpl/session_state.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 import 'package:azlistview/azlistview.dart';
 import 'package:collection/collection.dart';
@@ -9,11 +13,6 @@ import 'package:common_utils/common_utils.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dart_date/dart_date.dart';
 import 'package:extended_image/extended_image.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/ffmpeg_kit_config.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/ffprobe_kit.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/return_code.dart';
-import 'package:ffmpeg_kit_flutter_full_gpl/session_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_background/flutter_background.dart';
@@ -36,6 +35,7 @@ import 'package:sprintf/sprintf.dart';
 import 'package:uri_to_file/uri_to_file.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:flutter/foundation.dart';
+import 'package:video_compress/video_compress.dart';
 
 class IntervalDo {
   DateTime? last;
@@ -163,72 +163,106 @@ class IMUtils {
   static bool isMobile(String areaCode, String mobile) =>
       (areaCode == '+86' || areaCode == '86') ? isChinaMobile(mobile) : true;
 
-  static Future<File> getVideoThumbnail(File file) async {
-    final path = file.path;
-    final names = path.substring(path.lastIndexOf("/") + 1).split('.');
-    final name = '${names.first}.png';
-    final directory = await createTempDir(dir: 'video');
-    final targetPath = '$directory/$name';
+  static Future<MediaInfo> getMediaInfo(String path) {
+    final mediaInfo = VideoCompress.getMediaInfo(path);
 
-    final String ffmpegCommand = '-i $path -ss 0 -vframes 1 -q:v 15 -y $targetPath';
-    final session = await FFmpegKit.execute(ffmpegCommand);
-
-    final state = FFmpegKitConfig.sessionStateToString(await session.getState());
-    final returnCode = await session.getReturnCode();
-
-    if (state == SessionState.failed || !ReturnCode.isSuccess(returnCode)) {
-      Logger().printError(info: "Command failed. Please check output for the details.");
-    }
-
-    session.cancel();
-
-    return File(targetPath);
+    return mediaInfo;
   }
 
-  static Future<File?> compressVideoAndGetFile(File file) async {
+  /// Extracts a thumbnail (PNG image) from the first frame of a video file.
+  ///
+  /// Returns the generated thumbnail file. If extraction fails, throws an exception.
+  static Future<File> getVideoThumbnail(File file) async {
     final path = file.path;
-    final name = path.substring(path.lastIndexOf("/") + 1);
-    final directory = await createTempDir(dir: 'video');
-    final targetPath = '$directory/$name';
+    final fileName = path.split('/').last.split('.').first; // Get base name without extension
+    final tempDir = await createTempDir(dir: 'video');
+    final targetPath = '$tempDir/$fileName.png';
 
-    final output = await FFprobeKit.getMediaInformation(path);
-    final streams = output.getMediaInformation()?.getStreams();
-    final isH264 = streams?.any((element) => element.getCodec()?.contains('h264') == true) ?? false;
-    final size = output.getMediaInformation()?.getSize() ?? '0';
-    output.cancel();
-
-    final audioStream = streams?.firstWhereOrNull((e) => e.getType()?.contains('audio') == true);
-    final isAAC = audioStream?.getCodec()?.toLowerCase() != 'aac';
-
-    String ffmpegCommand =
-        '-i $path -preset ultrafast -tune fastdecode -threads:v 16 -threads:a 1 -c:a aac -strict -2 -crf 20 -c:v libx264 -y '
-        '$targetPath';
-
-    if (File(targetPath).existsSync() && isH264) {
-      if (isAAC) {
-        return File(targetPath);
-      } else {
-        ffmpegCommand = '-i $path -c:v copy -c:a aac -q:a 2 -threads 4 $targetPath';
-      }
-    }
-
-    if (int.parse(size) < 1024 * 1024 * 1024 && isH264) {
-      if (isAAC) {
-        file.copySync(targetPath);
-
-        return File(targetPath);
-      } else {
-        ffmpegCommand = '-i $path -c:v copy -c:a aac -q:a 2 -threads 4 $targetPath';
-      }
-    }
-
+    // FFmpeg command to extract the first frame at 0 seconds
+    final ffmpegCommand = '-i "$path" -ss 0 -vframes 1 -q:v 15 -y "$targetPath"';
     final session = await FFmpegKit.execute(ffmpegCommand);
 
     final state = await session.getState();
     final returnCode = await session.getReturnCode();
 
     if (state == SessionState.failed || !ReturnCode.isSuccess(returnCode)) {
-      Logger().printError(info: "Command failed. Please check output for the details.");
+      Logger().printError(info: 'Failed to generate thumbnail: $ffmpegCommand');
+      throw Exception('Thumbnail extraction failed for $path');
+    }
+
+    session.cancel();
+    final thumbnail = File(targetPath);
+
+    // Verify the thumbnail file exists
+    if (!thumbnail.existsSync()) {
+      Logger().printError(info: 'Thumbnail file not found at $targetPath');
+      throw Exception('Thumbnail file was not created');
+    }
+
+    return thumbnail;
+  }
+
+  ///  compress video
+  /// Compresses a video file and returns the resulting file.
+  /// Aims for speed priority, moderate quality, and minimal file size while keeping resolution unchanged.
+  static Future<File?> compressVideoAndGetFile(File file) async {
+    final path = file.path;
+    final fileName = path.split('/').last;
+    final tempDir = await createTempDir(dir: 'video');
+    final targetPath = '$tempDir/$fileName';
+
+    // Get media information using FFprobe
+    final mediaInfo = await FFprobeKit.getMediaInformation(path);
+    final streams = mediaInfo.getMediaInformation()?.getStreams() ?? [];
+    final fileSize = int.tryParse(mediaInfo.getMediaInformation()?.getSize() ?? '0') ?? 0;
+    mediaInfo.cancel();
+
+    // Check video and audio codecs
+    final isH264265 =
+        streams.any((s) => s.getCodec()?.contains('h264') == true || s.getCodec()?.contains('hevc') == true);
+    final audioStream = streams.firstWhereOrNull((s) => s.getType()?.contains('audio') == true);
+    final isAAC = audioStream?.getCodec()?.toLowerCase().contains('aac') == true;
+
+    // If target file exists and is H.264, return it directly (assuming no further processing needed)
+    if (File(targetPath).existsSync() && isH264265) {
+      return File(targetPath);
+    }
+
+    // Default FFmpeg command for compression
+    String ffmpegCommand = '-i "$path" -preset fast -crf 28 -threads 4 -c:a aac -b:a 96k -c:v libx264 -y "$targetPath"';
+
+    if (isH264265) {
+      if (isAAC) {
+        const sizeThreshold = 50 * 1024 * 1024; // 50MB threshold
+        if (fileSize > sizeThreshold) {
+          // Compress video if size exceeds threshold
+          final compressed = await VideoCompress.compressVideo(
+            path,
+            quality: VideoQuality.Res1280x720Quality, // Moderate quality for smaller file size
+          );
+          Logger.print('Compressed video size: ${compressed?.file?.lengthSync()} bytes');
+
+          return compressed?.file ?? file; // Return compressed file or original on failure
+        } else {
+          // Copy file directly if below threshold
+          file.copySync(targetPath);
+
+          return File(targetPath);
+        }
+      } else {
+        // Only convert audio to AAC, copy video stream for speed
+        ffmpegCommand = '-i "$path" -c:v copy -c:a aac -b:a 96k -threads 4 -y "$targetPath"';
+      }
+    }
+    // Execute FFmpeg command
+    Logger.print('executing FFmpeg command: $ffmpegCommand');
+    final session = await FFmpegKit.execute(ffmpegCommand);
+    final state = await session.getState();
+    final returnCode = await session.getReturnCode();
+
+    if (state == SessionState.failed || !ReturnCode.isSuccess(returnCode)) {
+      // Log error and fallback to copying original file
+      Logger().printError(info: "FFmpeg failed: $ffmpegCommand");
       file.copySync(targetPath);
 
       return File(targetPath);

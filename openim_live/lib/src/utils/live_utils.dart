@@ -58,7 +58,6 @@ class LiveUtils {
     return null;
   }
 
-  /// 剔除房间观察者
   static List<RemoteParticipant> removeObserver(String roomID, Room room) {
     return room.remoteParticipants.values.where((element) {
       Logger.print(
@@ -67,18 +66,14 @@ class LiveUtils {
     }).toList();
   }
 
-  /// 单聊获取真正通话的对象
   static RemoteParticipant? getRemoteParticipant(String? roomID, Room? room) {
     return room?.remoteParticipants.values
         .where((element) => roomID != element.identity)
         .firstOrNull;
   }
 
-  /// 我主动发起通话，一开始roomID为null，拨号成功返回roomID
-  /// 我被邀请通话，一开始就存在roomID
   static bool isSameRoom(CallEvent event, String? roomID) {
     var signalingInfo = event.data;
-    var opUserID = signalingInfo.userID;
     var invitation = signalingInfo.invitation!;
     // var inviterUserID = invitation.inviterUserID;
     // var inviteeUserIDList = invitation.inviteeUserIDList;
@@ -88,7 +83,7 @@ class LiveUtils {
     // var mediaType = invitation.mediaType;
     // var sessionType = invitation.sessionType;
     // var platformID = invitation.platformID;
-    Logger.print('${event.state}--当前房间：$roomID--信令来自：${invitation.roomID}');
+    Logger.print('${event.state}--Current roomID：$roomID, Signaling from roomID：${invitation.roomID}');
     return roomID == invitation.roomID;
   }
 }

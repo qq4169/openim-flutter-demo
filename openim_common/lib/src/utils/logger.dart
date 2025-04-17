@@ -31,6 +31,7 @@ class Logger {
   }
 
   String _header = '*flutter*iOS';
+  bool sdkIsInited = false;
 
   static void print(dynamic text,
       {bool isError = false,
@@ -44,7 +45,7 @@ class Logger {
     log(
       '$time ${Logger()._header} [Console]: $text, ${keyAndValues != null ? ', $keyAndValues' : ''}, isError [${isError || errorMsg != null}]',
     );
-    if (!onlyConsole) {
+    if (!onlyConsole && Logger().sdkIsInited) {
       OpenIM.iMManager.logs(
         msgs:
             '$time ${Logger()._header} [${functionName ?? ''}]: $text, ${keyAndValues != null ? ', $keyAndValues' : ''}',

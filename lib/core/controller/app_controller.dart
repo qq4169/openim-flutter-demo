@@ -80,19 +80,6 @@ class AppController extends GetxController with UpgradeManger {
     super.onInit();
   }
 
-  void _requestPermissions() {
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.requestNotificationsPermission();
-    flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-  }
-
   Future<void> showNotification(im.Message message, {bool showNotification = true}) async {
     if (_isGlobalNotDisturb() ||
         message.attachedInfoElem?.notSenderNotificationPush == true ||
@@ -124,11 +111,11 @@ class AppController extends GetxController with UpgradeManger {
       if (Platform.isAndroid) {
         final id = seq;
 
-        const androidPlatformChannelSpecifics = AndroidNotificationDetails('chat', 'OpenIM聊天消息',
-            channelDescription: '来自OpenIM的信息', importance: Importance.max, priority: Priority.high, ticker: 'ticker');
+        const androidPlatformChannelSpecifics = AndroidNotificationDetails('chat', 'OpenIM Chat',
+            channelDescription: 'OpenIM Chat Message', importance: Importance.max, priority: Priority.high, ticker: 'ticker');
         const NotificationDetails platformChannelSpecifics =
             NotificationDetails(android: androidPlatformChannelSpecifics);
-        await flutterLocalNotificationsPlugin.show(id, '您收到了一条新消息', '消息内容：.....', platformChannelSpecifics,
+        await flutterLocalNotificationsPlugin.show(id, 'You have a new message', 'Message：.....', platformChannelSpecifics,
             payload: '');
       }
     }
@@ -137,24 +124,6 @@ class AppController extends GetxController with UpgradeManger {
   Future<void> _cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }
-
-  Future<void> _startForegroundService() async {
-    await getAppInfo();
-    const androidPlatformChannelSpecifics = AndroidNotificationDetails('pro', 'OpenIM后台进程',
-        channelDescription: '保证app能收到信息', importance: Importance.max, priority: Priority.high, ticker: 'ticker');
-
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.startForegroundService(1, packageInfo!.appName, '正在运行...',
-            notificationDetails: androidPlatformChannelSpecifics, payload: '');
-  }
-
-  Future<void> _stopForegroundService() async {
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.stopForegroundService();
-  }
-
   void showBadge(count) {
     OpenIM.iMManager.messageManager.setAppBadge(count);
 
