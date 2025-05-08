@@ -36,7 +36,7 @@ class ChatLogic extends SuperController {
   final focusNode = FocusNode();
   final scrollController = ScrollController();
   final refreshController = RefreshController();
-  bool playOnce = false; // 点击的当前视频只能播放一次
+  bool playOnce = false;
 
   final forceCloseToolbox = PublishSubject<bool>();
   final sendStatusSub = PublishSubject<MsgStreamEv<bool>>();
@@ -47,7 +47,7 @@ class ChatLogic extends SuperController {
   final faceUrl = ''.obs;
   Timer? _debounce;
   final messageList = <Message>[].obs;
-  final tempMessages = <Message>[]; // 临时存放消息体，例如图片消息
+  final tempMessages = <Message>[];
   final scaleFactor = Config.textScaleFactor.obs;
   final background = "".obs;
   final memberUpdateInfoMap = <String, GroupMembersInfo>{};

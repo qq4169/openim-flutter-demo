@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:openim_common/openim_common.dart';
 
-/// 群公告
 class ChatNoticeView extends StatelessWidget {
   const ChatNoticeView({
     Key? key,

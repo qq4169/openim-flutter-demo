@@ -52,7 +52,7 @@ mixin UpgradeManger {
     }).then((value) {
       upgradeInfoV2 = value;
       if (!canUpdate) {
-        IMViews.showToast('已是最新版本');
+        IMViews.showToast('Current version is latest');
         return;
       }
       Get.dialog(

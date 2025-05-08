@@ -92,8 +92,8 @@ abstract class SignalState<T extends SignalView> extends State<T> {
     super.dispose();
   }
 
-  /// 过滤其他房间的信令
-  Stream<CallEvent> get sameRoomSignalStream => widget.callEventSubject.stream.where((event) => LiveUtils.isSameRoom(event, roomID));
+  Stream<CallEvent> get sameRoomSignalStream =>
+      widget.callEventSubject.stream.where((event) => LiveUtils.isSameRoom(event, roomID));
 
   _onUpdateUserInfo(UserInfo? info) {
     if (!mounted && null != info) return;
@@ -102,12 +102,10 @@ abstract class SignalState<T extends SignalView> extends State<T> {
     });
   }
 
-  ///  某些信令通过liveKit的监听
   _onStateDidUpdate(CallEvent event) {
-    Logger.print("CallEvent : 当前：$callState  收到：$event");
+    Logger.print("CallEvent current：$callState  event：$event");
     if (!mounted) return;
 
-    // ui 状态只有 呼叫，被呼叫，通话中，连接中
     if (event.state == CallState.call ||
         event.state == CallState.beCalled ||
         event.state == CallState.connecting ||
@@ -122,11 +120,11 @@ abstract class SignalState<T extends SignalView> extends State<T> {
         return;
       }
       widget.onClose?.call();
-      IMViews.showToast(sprintf(StrRes.otherCallHandle, [event.state == CallState.otherReject ? StrRes.rejectCall : StrRes.accept]));
+      IMViews.showToast(
+          sprintf(StrRes.otherCallHandle, [event.state == CallState.otherReject ? StrRes.rejectCall : StrRes.accept]));
     } else if (event.state == CallState.timeout) {
       widget.onClose?.call();
     } else if (event.state == CallState.beAccepted) {
-      // 邀请对象比发起对象提前进入房间
       if (null != remoteParticipantTrack) {
         onParticipantConnected();
       }
@@ -142,7 +140,6 @@ abstract class SignalState<T extends SignalView> extends State<T> {
     onTapHangup(false);
   }
 
-  /// 发起者在对方为进入房间都是 等待状态
   onDail() async {
     if (widget.initState == CallState.call) {
       // callStateSubject.add(CallState.connecting);
@@ -159,19 +156,20 @@ abstract class SignalState<T extends SignalView> extends State<T> {
   }
 
   onTapPickup() async {
-    Logger.print('------------onTapPickup---------连接中--------');
+    Logger.print('connecting');
     callStateSubject.add(CallState.connecting);
     certificate = await widget.onTapPickup!.call();
     widget.onBindRoomID?.call(roomID = certificate.roomID!);
     await connect();
     callStateSubject.add(CallState.calling);
     widget.onStartCalling?.call();
-    Logger.print('------------onTapPickup---------连接成功--------');
+    Logger.print('connected');
   }
 
-  /// [isPositive] 人为挂断行为
   onTapHangup(bool isPositive) async {
-    await widget.onTapHangup?.call(duration, isPositive).whenComplete(() => /*isPositive ? {} : */ widget.onClose?.call());
+    await widget.onTapHangup
+        ?.call(duration, isPositive)
+        .whenComplete(() => /*isPositive ? {} : */ widget.onClose?.call());
   }
 
   onTapCancel() async {
@@ -254,7 +252,8 @@ abstract class SignalState<T extends SignalView> extends State<T> {
                         child: SizedBox(
                           width: 120.w,
                           height: 180.h,
-                          child: ParticipantWidget.widgetFor(smallScreenIsRemote ? localParticipantTrack! : remoteParticipantTrack!),
+                          child: ParticipantWidget.widgetFor(
+                              smallScreenIsRemote ? localParticipantTrack! : remoteParticipantTrack!),
                         ),
                         onTap: () {
                           if (remoteParticipantTrack != null) {

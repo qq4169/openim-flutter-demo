@@ -20,9 +20,9 @@ enum SelAction {
 }
 
 class SelectContactsLogic extends GetxController implements OrganizationMultiSelBridge {
-  final checkedList = <String, dynamic>{}.obs; // 已经选中的
-  final defaultCheckedIDList = <String>{}.obs; // 默认选中，且不能修改
-  List<String>? excludeIDList; // 剔除某些数据
+  final checkedList = <String, dynamic>{}.obs;
+  final defaultCheckedIDList = <String>{}.obs;
+  List<String>? excludeIDList;
   late SelAction action;
   late bool openSelectedSheet;
   String? groupID;

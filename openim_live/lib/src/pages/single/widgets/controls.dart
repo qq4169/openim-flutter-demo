@@ -22,6 +22,7 @@ import 'package:openim_live/src/widgets/live_button.dart';
 import 'package:synchronized/synchronized.dart';
 
 import '../../../live_client.dart';
+
 class ControlsView extends StatefulWidget {
   const ControlsView({
     Key? key,
@@ -79,10 +80,8 @@ class _ControlsViewState extends State<ControlsView> {
   Room? _room;
   LocalParticipant? _participant;
 
-  /// 默认启用麦克风
   bool _enabledMicrophone = true;
 
-  /// 默认开启扬声器
   bool _enabledSpeaker = true;
 
   final _lockAudio = Lock();
@@ -305,7 +304,8 @@ class _ControlsViewState extends State<ControlsView> {
         LiveButton.cancel(onTap: widget.onCancel),
         LiveButton.speaker(on: _enabledSpeaker, onTap: _toggleSpeaker),
       ];
-    } else if (_callState == CallState.beCalled || _callState == CallState.connecting && widget.initState == CallState.beCalled) {
+    } else if (_callState == CallState.beCalled ||
+        _callState == CallState.connecting && widget.initState == CallState.beCalled) {
       return [
         LiveButton.reject(onTap: widget.onReject),
         LiveButton.pickUp(onTap: widget.onPickUp),

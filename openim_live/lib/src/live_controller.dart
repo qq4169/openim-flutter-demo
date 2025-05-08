@@ -13,7 +13,6 @@ import 'package:uuid/uuid.dart';
 
 import '../openim_live.dart';
 
-/// 信令
 mixin OpenIMLive {
   final signalingSubject = PublishSubject<CallEvent>();
 

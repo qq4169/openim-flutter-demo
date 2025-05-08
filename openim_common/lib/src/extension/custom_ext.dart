@@ -115,7 +115,7 @@ class TextView extends StatelessWidget {
         onTap: onTap,
         behavior: HitTestBehavior.translucent,
         child: Text(
-          wordEllipsis ? data : data.replaceAll('', '\u200B'), //解决Flutter按单词省略
+          wordEllipsis ? data : data.replaceAll('', '\u200B'),
           style: style,
           textAlign: textAlign,
           overflow: overflow,
