@@ -33,8 +33,8 @@ OpenIM 为开发者提供开源即时通讯 SDK，作为 Twilio、Sendbird 等�
 
 在开始开发之前，请确保您的系统已安装以下软件：
 
-- **操作系统**：macOS 14.6 或更高版本
-- **Flutter**：版本 3.24.5（根据官网步骤进行[安装](https://docs.flutter.cn/get-started/install)）XCode: 15.4, Android Studio: Koala | 2024.1.1 Patch 1
+- **操作系统**：macOS 15 或更高版本
+- **Flutter**：版本 3.27.4（根据官网步骤进行[安装](https://docs.flutter.cn/get-started/install)）XCode: 16.1, Android Studio: Koala | 2024.1.1 Patch 1
 - **Git**：用于代码版本控制
 
 同时，您需要确保已经[部署](https://docs.openim.io/zh-Hans/guides/gettingStarted/dockerCompose)了最新版本的 OpenIM Server。接下来，您可以编译项目并连接自己的服务端进行测试。
@@ -251,7 +251,3 @@ OpenIM 为开发者提供开源即时通讯 SDK，作为 Twilio、Sendbird 等�
 ##### 9. 离线推送为什么不能使用？
 
 答: [文档](CONFIGKEY.zh-CN.md)
-
-##### 10. ffmpeg不能使用？
-
-可以自行编译或者使用其它源，例如： https://github.com/carl-designlibro/ffmpeg-kit
