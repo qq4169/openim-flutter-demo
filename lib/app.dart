@@ -43,7 +43,7 @@ class ChatApp extends StatelessWidget {
   ThemeData get _themeData => ThemeData.light().copyWith(
         scaffoldBackgroundColor: Colors.grey.shade50,
         canvasColor: Colors.white,
-        appBarTheme: const AppBarTheme(color: Colors.white),
+        appBarTheme: const AppBarThemeData(color: Colors.white),
         textSelectionTheme: const TextSelectionThemeData().copyWith(cursorColor: Colors.blue),
         checkboxTheme: const CheckboxThemeData().copyWith(
           checkColor: WidgetStateProperty.all(Colors.white),
