@@ -36,6 +36,7 @@ subprojects { afterEvaluate { android { compileSdkVersion 34 } } }
 // apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
+    namespace "com.example.openim_flutter_demo"
     compileSdkVersion 34
     ndkVersion flutter.ndkVersion
 
